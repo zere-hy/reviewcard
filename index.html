@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>영어 플래시카드</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f2f2f2;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.container{
+width:90%;
+max-width:400px;
+text-align:center;
+}
+
+.card{
+background:white;
+border-radius:20px;
+padding:70px 20px;
+font-size:30px;
+font-weight:bold;
+box-shadow:0 10px 25px rgba(0,0,0,.15);
+cursor:pointer;
+min-height:180px;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+button{
+margin-top:20px;
+padding:12px 20px;
+font-size:18px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+.info{
+margin-top:15px;
+color:gray;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card" onclick="flipCard()" id="card">
+I'd rather
+</div>
+
+<div class="info" id="count">
+1 / 3
+</div>
+
+<button onclick="nextCard()">
+다음 →
+</button>
+
+</div>
+
+<script>
+
+const cards=[
+
+{
+english:"I'd rather",
+korean:"차라리 ~하겠다"
+},
+
+{
+english:"play it safe",
+korean:"안전한 선택을 하다"
+},
+
+{
+english:"take it for granted",
+korean:"~을 당연하게 여기다"
+}
+
+];
+
+let current=0;
+let flipped=false;
+
+function showCard(){
+
+document.getElementById("card").innerHTML=
+cards[current].english;
+
+document.getElementById("count").innerHTML=
+(current+1)+" / "+cards.length;
+
+flipped=false;
+
+}
+
+function flipCard(){
+
+if(!flipped){
+
+document.getElementById("card").innerHTML=
+cards[current].korean;
+
+flipped=true;
+
+}else{
+
+document.getElementById("card").innerHTML=
+cards[current].english;
+
+flipped=false;
+
+}
+
+}
+
+function nextCard(){
+
+current++;
+
+if(current>=cards.length){
+
+current=0;
+
+}
+
+showCard();
+
+}
+
+showCard();
+
+</script>
+
+</body>
+</html>
