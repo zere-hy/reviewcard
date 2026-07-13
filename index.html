@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power English Review</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#172033;--muted:#707990;--line:#e2e6ef;--accent:#596aa8;--good:#e9f7ee;--bad:#fdecec}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif}
+.app{width:min(680px,100%);margin:0 auto;padding:24px 18px 42px}
+h1{text-align:center;font-size:30px;margin:8px 0 6px}
+.subtitle{text-align:center;color:var(--muted);margin:0 0 24px}
+.version{text-align:center;color:#9aa1b3;font-size:12px;margin-top:18px}
+.hidden{display:none!important}
+.date-list{display:grid;gap:12px}
+.date-btn,.mode-btn{width:100%;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;text-align:left;cursor:pointer;box-shadow:0 5px 16px rgba(38,47,77,.06)}
+.date-btn strong{display:block;font-size:19px;margin-bottom:5px}
+.date-btn span{color:var(--muted)}
+.back{border:0;background:transparent;color:var(--accent);font-weight:800;cursor:pointer;padding:6px 0 14px;font-size:15px}
+.section-title{text-align:center;margin:0 0 4px;font-size:25px}
+.section-count{text-align:center;color:var(--muted);margin:0 0 20px}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode-btn{text-align:center;font-size:16px;font-weight:800}
+.mode-btn small{display:block;margin-top:6px;color:var(--muted);font-weight:600}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 14px;color:var(--muted);font-size:14px}
+.small-btn{border:0;background:transparent;color:var(--accent);font-weight:800;cursor:pointer}
+.study-card{min-height:360px;background:var(--card);border-radius:24px;box-shadow:0 12px 32px rgba(38,47,77,.10);padding:34px 26px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;user-select:none}
+.label{font-size:14px;color:var(--muted);font-weight:800;margin-bottom:20px}
+.prompt{font-size:clamp(25px,5vw,38px);line-height:1.45;font-weight:850;white-space:pre-line}
+.example-ko{margin-top:20px;color:var(--muted);font-size:18px;line-height:1.6;white-space:pre-line}
+.hint{margin-top:28px;color:var(--muted);font-size:14px}
+.nav,.score-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.nav button,.score-row button{border:0;border-radius:15px;padding:15px 10px;font-size:16px;font-weight:850;cursor:pointer}
+.prev{background:#e9ecf3;color:var(--text)} .next{background:var(--accent);color:#fff}
+.wrong{background:var(--bad);color:#a33a3a} .correct{background:var(--good);color:#287a47}
+.result{background:var(--card);border:1px solid var(--line);border-radius:20px;margin-top:16px;padding:28px 22px;text-align:center}
+.result .emoji{font-size:42px;margin-bottom:8px}
+.result h3{font-size:26px;margin:0 0 10px}
+.result strong{display:block;font-size:28px;margin-bottom:8px}
+.result-actions{display:grid;gap:10px;margin-top:18px}
+.result-actions button{border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer}
+.primary{background:var(--accent);color:#fff}.secondary{background:#e9ecf3;color:var(--text)}
+.error{background:#fff3f3;border:1px solid #f2caca;color:#8f3636;padding:18px;border-radius:16px;line-height:1.6}
+@media(max-width:500px){.mode-grid{grid-template-columns:1fr}.study-card{min-height:330px}}
+</style>
+</head>
+<body>
+<main class="app">
+<section id="dateScreen">
+  <h1>Power English Review</h1>
+  <p class="subtitle">복습할 날짜를 선택하세요.</p>
+  <div id="dateList" class="date-list"></div>
+  <div id="errorBox" class="error hidden"></div>
+  <div class="version">v1.1</div>
+</section>
+
+<section id="modeScreen" class="hidden">
+  <button class="back" id="backToDates">← 날짜 목록</button>
+  <h2 class="section-title" id="selectedDate"></h2>
+  <p class="section-count" id="selectedCount"></p>
+  <div class="mode-grid">
+    <button class="mode-btn" data-mode="ko-en">뜻 → 영어<small id="resume-ko-en"></small></button>
+    <button class="mode-btn" data-mode="en-ko">영어 → 뜻<small id="resume-en-ko"></small></button>
+    <button class="mode-btn" data-mode="blank">빈칸 퀴즈<small id="resume-blank"></small></button>
+    <button class="mode-btn" data-mode="random">랜덤<small id="resume-random"></small></button>
+  </div>
+</section>
+
+<section id="studyScreen" class="hidden">
+  <button class="back" id="backToModes">← 공부 방식</button>
+  <div class="toolbar">
+    <span id="counter"></span>
+    <button class="small-btn" id="shuffleBtn">카드 섞기</button>
+  </div>
+
+  <div class="study-card" id="card">
+    <div class="label" id="label"></div>
+    <div class="prompt" id="prompt"></div>
+    <div class="example-ko" id="exampleKo"></div>
+    <div class="hint" id="hint">카드를 누르면 정답이 보여요.</div>
+  </div>
+
+  <div class="score-row hidden" id="scoreRow">
+    <button class="wrong" id="wrongBtn">틀렸어요</button>
+    <button class="correct" id="correctBtn">맞았어요</button>
+  </div>
+
+  <div class="nav">
+    <button class="prev" id="prevBtn">← 이전</button>
+    <button class="next" id="nextBtn">다음 →</button>
+  </div>
+
+  <div class="result hidden" id="result">
+    <div class="emoji" id="resultEmoji">🎉</div>
+    <h3 id="resultTitle">Great job!</h3>
+    <strong id="resultScore"></strong>
+    <div id="resultText"></div>
+    <div class="result-actions">
+      <button class="primary hidden" id="retryWrongBtn">오답만 다시 복습하기</button>
+      <button class="secondary" id="backDatesBtn">날짜 목록으로</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+let allCards=[],dateCards=[],cards=[];
+let selectedDate="",mode="ko-en",current=0,showingAnswer=false;
+let correctCount=0,answeredCount=0,wrongCards=[];
+
+const $=id=>document.getElementById(id);
+const screens=["dateScreen","modeScreen","studyScreen"];
+function showScreen(id){screens.forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+
+function parseCSV(text){
+  const rows=[];let row=[],cell="",quoted=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],next=text[i+1];
+    if(c==='"'&&quoted&&next==='"'){cell+='"';i++}
+    else if(c==='"'){quoted=!quoted}
+    else if(c===","&&!quoted){row.push(cell);cell=""}
+    else if((c==="\n"||c==="\r")&&!quoted){
+      if(c==="\r"&&next==="\n")i++;
+      row.push(cell);cell="";
+      if(row.some(v=>v.trim()!==""))rows.push(row);
+      row=[]
+    }else cell+=c
+  }
+  if(cell.length||row.length){row.push(cell);rows.push(row)}
+  const headers=rows.shift().map(h=>h.trim().replace(/^\uFEFF/,""));
+  return rows.map(r=>{const obj={};headers.forEach((h,i)=>obj[h]=(r[i]||"").trim());return obj})
+}
+
+function formatDate(date){
+  const p=date.split("-");
+  return p.length===3?`${p[0]}.${p[1]}.${p[2]}`:date
+}
+
+function todayString(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
+}
+
+function progressKey(date,studyMode){return `power-review-progress:${date}:${studyMode}`}
+function getSavedProgress(date,studyMode){
+  const raw=localStorage.getItem(progressKey(date,studyMode));
+  if(!raw)return null;
+  try{const data=JSON.parse(raw);return Number.isInteger(data.current)?data:null}catch{return null}
+}
+function saveProgress(){
+  if(!selectedDate||!mode||!cards.length)return;
+  localStorage.setItem(progressKey(selectedDate,mode),JSON.stringify({current,answeredCount,correctCount}))
+}
+function clearProgress(){localStorage.removeItem(progressKey(selectedDate,mode))}
+function updateResumeLabels(){
+  ["ko-en","en-ko","blank","random"].forEach(m=>{
+    const saved=getSavedProgress(selectedDate,m);
+    const el=$(`resume-${m}`);
+    el.textContent=(saved&&saved.current>0&&saved.current<dateCards.length)
+      ?`이어서 하기 ${saved.current+1} / ${dateCards.length}`:""
+  })
+}
+
+async function loadCards(){
+  try{
+    const response=await fetch("cards.csv?ts="+Date.now());
+    if(!response.ok)throw new Error("cards.csv 파일을 찾을 수 없습니다.");
+    const text=await response.text();
+    allCards=parseCSV(text).filter(x=>x.date&&x.meaning&&x.expression);
+    if(!allCards.length)throw new Error("cards.csv에 카드가 없습니다.");
+    renderDates()
+  }catch(error){
+    $("errorBox").textContent="카드 파일을 읽지 못했어요. GitHub에 index.html과 cards.csv가 같은 위치에 있는지 확인하세요.";
+    $("errorBox").classList.remove("hidden")
+  }
+}
+
+function renderDates(){
+  const groups={};
+  allCards.forEach(card=>{if(!groups[card.date])groups[card.date]=[];groups[card.date].push(card)});
+  const dates=Object.keys(groups).filter(date=>date<=todayString()).sort((a,b)=>b.localeCompare(a));
+  $("dateList").innerHTML="";
+  if(!dates.length){
+    $("dateList").innerHTML='<div style="text-align:center;color:#707990;padding:30px 10px;">아직 공개된 복습 자료가 없어요.</div>';
+    return
+  }
+  dates.forEach(date=>{
+    const button=document.createElement("button");
+    button.className="date-btn";
+    button.innerHTML=`<strong>📅 ${formatDate(date)}</strong><span>${groups[date].length} Expressions</span>`;
+    button.onclick=()=>selectDate(date,groups[date]);
+    $("dateList").appendChild(button)
+  })
+}
+
+function selectDate(date,group){
+  selectedDate=date;dateCards=[...group];
+  $("selectedDate").textContent=formatDate(date);
+  $("selectedCount").textContent=`${group.length} Expressions`;
+  updateResumeLabels();showScreen("modeScreen")
+}
+
+function setMode(newMode){
+  mode=newMode;cards=[...dateCards];
+  const saved=getSavedProgress(selectedDate,mode);
+  current=saved?.current||0;
+  answeredCount=saved?.answeredCount||0;
+  correctCount=saved?.correctCount||0;
+  wrongCards=[];
+  showScreen("studyScreen");renderCard()
+}
+
+function modeForCard(){
+  if(mode!=="random")return mode;
+  const options=["ko-en","en-ko","blank"];
+  return options[Math.floor(Math.random()*options.length)]
+}
+
+function answerFor(item){return (item.answer||item.expression||"").trim()}
+function escapeRegExp(text){return text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
+function blankForAnswer(answer){
+  return answer.split(/\s+/).map(word=>"_".repeat(Math.max(word.length,4))).join(" ")
+}
+function makeBlankExample(item){
+  const example=(item.example||"").trim();
+  const answer=answerFor(item);
+  if(!example||!answer)return example||"(예문이 없습니다)";
+  const regex=new RegExp(escapeRegExp(answer),"i");
+  return regex.test(example)?example.replace(regex,blankForAnswer(answer)):example
+}
+
+function renderCard(){
+  showingAnswer=false;
+  $("scoreRow").classList.add("hidden");
+  $("result").classList.add("hidden");
+  const item=cards[current];
+  const activeMode=modeForCard();
+  $("card").dataset.activeMode=activeMode;
+  $("counter").textContent=`${current+1} / ${cards.length}`;
+  $("hint").textContent="카드를 누르면 정답이 보여요.";
+
+  if(activeMode==="ko-en"){
+    $("label").textContent="뜻을 보고 영어 표현을 말해보세요.";
+    $("prompt").textContent=item.meaning;
+    $("exampleKo").textContent=""
+  }else if(activeMode==="en-ko"){
+    $("label").textContent="영어 표현의 뜻을 말해보세요.";
+    $("prompt").textContent=item.expression;
+    $("exampleKo").textContent=""
+  }else{
+    $("label").textContent="빈칸에 들어갈 표현을 말해보세요.";
+    $("prompt").textContent=makeBlankExample(item);
+    $("exampleKo").textContent=item.exampleKo||""
+  }
+  saveProgress()
+}
+
+function revealAnswer(){
+  if(showingAnswer)return;
+  const item=cards[current];
+  const activeMode=$("card").dataset.activeMode;
+  $("label").textContent="정답";
+  if(activeMode==="ko-en")$("prompt").textContent=item.expression;
+  else if(activeMode==="en-ko")$("prompt").textContent=item.meaning;
+  else{
+    $("prompt").textContent=answerFor(item);
+    $("exampleKo").textContent=item.example||""
+  }
+  $("hint").textContent="맞았는지 선택하세요.";
+  showingAnswer=true;
+  $("scoreRow").classList.remove("hidden")
+}
+
+function nextCard(){current=(current+1)%cards.length;saveProgress();renderCard()}
+function prevCard(){current=(current-1+cards.length)%cards.length;saveProgress();renderCard()}
+
+function markAnswer(correct){
+  answeredCount++;
+  if(correct)correctCount++;
+  else if(!wrongCards.includes(cards[current]))wrongCards.push(cards[current]);
+
+  if(answeredCount>=cards.length)showResult();
+  else{
+    current=(current+1)%cards.length;
+    saveProgress();
+    renderCard()
+  }
+}
+
+function showResult(){
+  const percent=Math.round(correctCount/answeredCount*100);
+  let title="Good job!",emoji="👏",message="이번 주 복습을 모두 마쳤어요.";
+
+  if(percent===100){
+    title="Perfect! Great job!";
+    emoji="🏆";
+    message="모든 표현을 정확히 기억했어요!"
+  }else if(percent>=80){
+    title="Great job!";
+    emoji="🎉";
+    message="아주 잘했어요. 조금만 더 복습하면 완벽해요!"
+  }else{
+    title="Nice work!";
+    emoji="💪";
+    message="끝까지 해낸 것만으로도 충분히 잘했어요."
+  }
+
+  $("resultEmoji").textContent=emoji;
+  $("resultTitle").textContent=title;
+  $("resultScore").textContent=`${correctCount} / ${answeredCount}`;
+  $("resultText").textContent=`정답률 ${percent}% · ${message}`;
+  $("retryWrongBtn").classList.toggle("hidden",wrongCards.length===0);
+  $("result").classList.remove("hidden");
+  $("scoreRow").classList.add("hidden");
+  clearProgress();
+  updateResumeLabels()
+}
+
+function shuffleCards(){
+  for(let i=cards.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]]
+  }
+  current=0;correctCount=0;answeredCount=0;wrongCards=[];
+  saveProgress();renderCard()
+}
+
+document.querySelectorAll(".mode-btn").forEach(btn=>btn.onclick=()=>setMode(btn.dataset.mode));
+$("backToDates").onclick=()=>showScreen("dateScreen");
+$("backToModes").onclick=()=>{updateResumeLabels();showScreen("modeScreen")};
+$("backDatesBtn").onclick=()=>showScreen("dateScreen");
+$("card").onclick=revealAnswer;
+$("nextBtn").onclick=nextCard;
+$("prevBtn").onclick=prevCard;
+$("shuffleBtn").onclick=shuffleCards;
+$("correctBtn").onclick=()=>markAnswer(true);
+$("wrongBtn").onclick=()=>markAnswer(false);
+$("retryWrongBtn").onclick=()=>{
+  cards=[...wrongCards];
+  current=0;correctCount=0;answeredCount=0;wrongCards=[];
+  $("result").classList.add("hidden");
+  renderCard()
+};
+
+loadCards();
+</script>
+</body>
+</html>
